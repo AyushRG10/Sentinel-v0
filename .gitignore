@@ -1,0 +1,14 @@
+# Ignore the virtual environment folder
+venv/
+env/
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+
+# Ignore environment variables (keep your API keys safe!)
+.env
+
+# Ignore Obsidian data dumps (so your agent's memory isn't uploaded)
+data/
+Local_Brain/
