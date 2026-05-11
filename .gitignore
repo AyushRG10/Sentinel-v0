@@ -11,4 +11,4 @@ __pycache__/
 
 # Ignore Obsidian data dumps (so your agent's memory isn't uploaded)
 data/
-Local_Brain/
+Second_Brain/

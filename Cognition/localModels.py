@@ -3,10 +3,70 @@ import json
 
 class OllamaClient:
 
-    def __init__ (self, host="http://localhost:11434", default_model="gemma3:4b"):
+    def __init__ (self, host="http://localhost:11434", default_model="llama3.1:latest"):
         self.host = host
         self.default_model = default_model
         self.api_generate_url = f"{self.host}/api/generate"
+        self.api_chat_url = f"{self.host}/api/chat"
+        
+        # Tool schemas for Obsidian memory
+        self.tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "search_obsidian_note",
+                    "description": "Searches the memory vault for a keyword and returns a list of matching file paths. You must use the read_obsidian_note tool on one of the resulting file paths to actually read the contents.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "keyword": {
+                                "type": "string",
+                                "description": "The keyword to search for."
+                            }
+                        },
+                        "required": ["keyword"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "read_obsidian_note",
+                    "description": "Reads the content of a specific note from the memory vault.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "note_path": {
+                                "type": "string",
+                                "description": "The relative path of the note to read, e.g., 'Rules\\Directives.md'"
+                            }
+                        },
+                        "required": ["note_path"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "write_obsidian_note",
+                    "description": "Appends content to a specific note in the memory vault.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "note_path": {
+                                "type": "string",
+                                "description": "The relative path of the note to write to."
+                            },
+                            "content": {
+                                "type": "string",
+                                "description": "The content to append."
+                            }
+                        },
+                        "required": ["note_path", "content"]
+                    }
+                }
+            }
+        ]
 
     def check_health(self):
         try:
@@ -20,39 +80,31 @@ class OllamaClient:
             print(f"Error is: {e}")
             return False
 
-    def generate_response(self, prompt, model=None, system_prompt=None):
-        """
-        Sends a prompt to local Ollama model and retrieves response
-        Args:
-            prompt (str): The prompt to send to the model
-            model (str, optional): The model to use. Defaults to self.default_model
-            system_prompt (str, optional): The system prompt to use. Defaults to None
-        Returns:
-            str: The response from the model
-            None: If the response could not be generated
-        """
+    def generate_response(self, prompt_or_messages, model=None):
         target_model = model if model else self.default_model
 
-        #payload structure ollama expects
+        # If the user passes a simple string, convert it to a message format automatically!
+        if isinstance(prompt_or_messages, str):
+            messages = [{"role": "user", "content": prompt_or_messages}]
+        else:
+            messages = prompt_or_messages
+
         payload = {
             "model": target_model,
-            "prompt": prompt,
+            "messages": messages,
+            "tools": self.tools,
             "stream": False,
+            "options": {
+                "num_ctx": 4096
+            }
         }
 
-        #add system prompt later - through obsidian most likely
-
-        #implement requests.post call here using self.api_generate_url and the payload
-        #Parse the JSON response and return the actual string of text
         try:
-            response = requests.post(self.api_generate_url, json=payload, timeout=90)
-
+            response = requests.post(self.api_chat_url, json=payload, timeout=90)
             response.raise_for_status()
-
             data = response.json()
-
-            return data.get("response")
-
+            return data.get("message")
+            
         except requests.exceptions.RequestException as e:
-            print(f"Error is: {e}")
+            print(f"Error in generate_response: {e}")
             return None
