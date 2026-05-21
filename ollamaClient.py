@@ -26,18 +26,3 @@ class OllamaClient:
         except Exception as e:
             print(f"Error: {e}")
             return ""
-
-if __name__ == "__main__":
-
-    client = OllamaClient()
-
-    isActive = client.check_model()
-    if isActive:
-        print("Sentinel: [RUNNING] Ollama is online.")
-
-        while True:
-            query = input("User: ")
-            response = client.generate("llama3", query)
-            print("Sentinel: ", response)
-    else:
-        print("Sentinel: [ERROR] Ollama is not running.")
