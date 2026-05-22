@@ -30,15 +30,10 @@ class KillSwitch:
         try:
             new_settings = termios.tcgetattr(fd)
             
-            # [0] = Input modes (c_iflag)
-            # Disable IXON (XON/XOFF flow control) so Ctrl+X isn't intercepted
             new_settings[0] = new_settings[0] & ~termios.IXON
             
-            # [3] = Local modes (c_lflag)
-            # Disable ICANON and ECHO
             new_settings[3] = new_settings[3] & ~termios.ICANON
             
-            # Ensure OPOST is enabled for correct newline behavior
             new_settings[3] = new_settings[3] | termios.OPOST
             
             termios.tcsetattr(fd, termios.TCSADRAIN, new_settings)
