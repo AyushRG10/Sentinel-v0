@@ -1,16 +1,20 @@
 from ollamaClient import OllamaClient
+from killSwitch import KillSwitch
 
 class MainLoop:
 
     client = OllamaClient()
+    killSwitch = KillSwitch()
+    killSwitch.arm()
 
     runMainLoop = True
-    tries = 0
+    tries = 3
     while runMainLoop:
         isClientActive = client.check_model()
         if isClientActive:
-            tries = 0
-            print("Sentinel: [INFO] Client is online.")
+            if tries != 0:
+                print("Sentinel: [INFO] Client is online.")
+                tries = 0
             prompt = input("User: ")
             if prompt == "quit":
                 print("Sentinel: [INFO] Exiting.")
