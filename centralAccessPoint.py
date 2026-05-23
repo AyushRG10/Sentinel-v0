@@ -1,5 +1,6 @@
 from ollamaClient import OllamaClient
 from killSwitch import KillSwitch
+import time
 
 class MainLoop:
 
@@ -9,6 +10,11 @@ class MainLoop:
 
     runMainLoop = True
     tries = 3
+
+    if client.check_model():
+        client.generate("qwen2.5:7b-instruct", "Read Welcome.md first and follow the instructions inside it.")
+        client.generate("qwen2.5:7b-instruct", "Read Current Context")
+        
     while runMainLoop:
         isClientActive = client.check_model()
         if isClientActive:
@@ -20,7 +26,7 @@ class MainLoop:
                 print("Sentinel: [INFO] Exiting.")
                 runMainLoop = False
             else:
-                response = client.generate("llama3", prompt)
+                response = client.generate("qwen2.5:7b-instruct", prompt)
                 print(f"Sentinel: {response}")
         else:
             print("Sentinel: [ERROR] Client is offline.")
@@ -29,6 +35,7 @@ class MainLoop:
             if tries >= 3:
                 print("Sentinel: [ERROR] Client is offline. Exiting.")
                 runMainLoop = False
+            time.sleep(1)
 
 if __name__ == "__main__":
     MainLoop()
