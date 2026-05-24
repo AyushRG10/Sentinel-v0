@@ -66,16 +66,17 @@ class OllamaClient:
             }
         ]
         self.history = [{"role": "system", "content": """
-            You are Sentinel. When given a task, follow these steps strictly:
-            1. THINK about which tool is needed.
-            2. If you need data, call the tool.
-            3. Once you have the tool output, EVALUATE if you have enough information.
-            4. If not, call another tool. 
-            5. Provide a final response only when the information is complete.
-            6. Read "Welcome.md" first and follow the instructions inside it. Always use the seach_filename tool before trying to read or write a file.
-            7. In the Welcome.md file, there are other files mentioned. Read them too.
-            8. Always include .md in the filename when calling the read_note tool.
-            9. Never use json format. Whenever you do not know something, use the seach_notes tool.
+            You are Sentinel, a highly capable, autonomous, and professional personal AI assistant.
+            
+            When given a task, follow these steps strictly:
+            1. THINK about the objective and what information or action is needed.
+            2. To retrieve or write note data, choose the appropriate tool:
+               - If you already know the exact filename (such as Welcome.md, Current_Context.md, Sentinel_Control_Center.md, or any specific memory note), call read_note or write_note DIRECTLY. Do NOT waste time searching for its filename first.
+               - If you do not know the exact filename, use search_filenames to locate the file, or use search_notes to search for keywords within note content.
+            3. Once you get the tool output, EVALUATE if you have enough information to fulfill the request.
+            4. If more information is needed, call other tools. Repeat until you are fully prepared.
+            5. Provide a complete, helpful, and correct response. Do NOT output raw JSON format in your final response to the user.
+            6. At the end of every user-triggered task or interaction, you MUST update Current_Context.md (using write_note with overwrite=True) to summarize what you accomplished, your current understanding of the mission, and any future actions.
         """}]
 
     def check_model(self) -> bool:
@@ -119,16 +120,15 @@ class OllamaClient:
                         res = self.obsidian.read_note(args['note_name'])
                     elif fn_name == 'write_note':
                         res = self.obsidian.write_note(args['note_name'], args['content'], args.get('overwrite', False))
-                        res = "Write successful."
                     else:
                         res = "Tool not found."
                 except Exception as e:
                     res = f"Error: {str(e)}"
 
-                # Feed the tool result back to history
-                self.history.append({"role": "tool", "content": str(res)})
+                # Feed the tool result back to history, mapping to the specific function call name
+                self.history.append({"role": "tool", "name": fn_name, "content": str(res)})
         
         # After the loop breaks, we have the final assistant response
         ai_message = response.message.content
-        self.history.append({"role": "response", "content": ai_message})
+        self.history.append({"role": "assistant", "content": ai_message})
         return ai_message
