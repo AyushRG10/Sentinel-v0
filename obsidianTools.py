@@ -106,6 +106,10 @@ class ObsidianTools:
         if not note_name:
             raise ValueError("note_name cannot be empty")
 
+        # Normalize overwrite parameter if it's passed as a string
+        if isinstance(overwrite, str):
+            overwrite = overwrite.lower() in ("true", "1", "yes")
+
         # Standardize .md extension
         if not note_name.lower().endswith(".md"):
             note_name_md = note_name + ".md"
@@ -148,8 +152,75 @@ class ObsidianTools:
         # Create directory if it does not exist
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
 
+        # If appending, ensure we start on a new line if the file doesn't end with one
+        if not overwrite and os.path.exists(target_path) and os.path.getsize(target_path) > 0:
+            try:
+                with open(target_path, "r", encoding="utf-8") as f:
+                    last_char = f.read()[-1:]
+                if last_char and last_char != "\n":
+                    content = "\n" + content
+            except Exception:
+                pass
+
         mode = "w" if overwrite else "a"
         with open(target_path, mode, encoding="utf-8") as f:
             f.write(content + "\n")
             
         return f"Successfully wrote to {os.path.relpath(target_path, self.vault_path)}"
+
+    def get_vault_structure(self) -> str:
+        """Returns a string representation of the vault's directories and markdown files."""
+        folders = []
+        notes = []
+        for root, dirs, files in os.walk(self.vault_path):
+            # Exclude hidden directories
+            dirs[:] = [d for d in dirs if not d.startswith('.')]
+            for d in dirs:
+                rel_dir = os.path.relpath(os.path.join(root, d), self.vault_path)
+                folders.append(rel_dir)
+            for f in files:
+                if f.endswith(".md"):
+                    rel_file = os.path.relpath(os.path.join(root, f), self.vault_path)
+                    notes.append(rel_file)
+        
+        # Format the output beautifully
+        output = "Available Folders inside Vault:\n"
+        if folders:
+            for folder in sorted(folders):
+                output += f"- {folder}/\n"
+        else:
+            output += "- (None)\n"
+            
+        output += "\nExisting Markdown Notes in Vault:\n"
+        if notes:
+            for note in sorted(notes):
+                output += f"- {note}\n"
+        else:
+            output += "- (None)\n"
+            
+        return output
+
+    def note_exists(self, note_name: str) -> bool:
+        """Checks if a note exists anywhere in the vault (either directly or recursively)."""
+        if not note_name:
+            return False
+            
+        if not note_name.lower().endswith(".md"):
+            note_name_md = note_name + ".md"
+        else:
+            note_name_md = note_name
+
+        # 1. Try exact match relative to vault root
+        direct_path = os.path.join(self.vault_path, note_name_md)
+        if os.path.exists(direct_path) and os.path.isfile(direct_path):
+            return True
+
+        # 2. Try recursive search for the base name with normalization
+        base_name_norm = self._normalize_name(os.path.basename(note_name_md))
+        for root, dirs, files in os.walk(self.vault_path):
+            dirs[:] = [d for d in dirs if not d.startswith('.')]
+            for file in files:
+                if self._normalize_name(file) == base_name_norm:
+                    return True
+                    
+        return False

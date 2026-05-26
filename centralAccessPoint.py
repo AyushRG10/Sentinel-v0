@@ -44,7 +44,7 @@ class MainLoop:
                     
                     Perform all these operations now using your tools.
                     """
-                    response = self.client.generate("qwen2.5:7b-instruct", archive_prompt)
+                    response = self.client.generate("qwen3.5:9b", archive_prompt)
                     print(f"Sentinel: {response}")
                 else:
                     # Retrieve the latest Current_Context.md to prep the agent's short-term memory
@@ -54,7 +54,7 @@ class MainLoop:
                     else:
                         full_prompt = prompt
 
-                    response = self.client.generate("qwen2.5:7b-instruct", full_prompt)
+                    response = self.client.generate("qwen3.5:9b", full_prompt)
                     print(f"Sentinel: {response}")
             else:
                 print("Sentinel: [ERROR] Client is offline.")
@@ -85,7 +85,7 @@ class MainLoop:
             
             Confirm once initialization is complete.
             """
-            response = self.client.generate("qwen2.5:7b-instruct", init_prompt)
+            response = self.client.generate("qwen3.5:9b", init_prompt)
             print(f"Sentinel: {response}")
         else:
             print("Sentinel: [WARNING] Welcome.md not found. Booting with default state.")
