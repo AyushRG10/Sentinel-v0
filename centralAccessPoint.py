@@ -30,6 +30,19 @@ class MainLoop:
                     break
 
                 if prompt.lower() == "quit":
+                    print("Sentinel: [INFO] Executing end-of-session archiving before exit...")
+                    today_str = datetime.date.today().strftime("%m.%d.%Y")
+                    archive_prompt = f"""[System Notice: Archive Command]
+                    Take everything from memories/Current_Context.md and archive it:
+                    1. Create a new memory file inside the memories folder (e.g. memories/Memory_Name_{today_str}.md) with today's date and the main topics of Current_Context.md as the header, containing the content of Current_Context.md.
+                    2. For each main topic, check if a topic note exists in the topics folder. If not, create it. Update the topic note to link to the new memory using [[Memory_Name_{today_str}]] and add any relevant information.
+                    3. Link the topic in the memory note using [[Topic_Name]].
+                    4. Finally, update memories/Current_Context.md to be very simple, linking only the new memory (e.g. [[Memory_Name_{today_str}]]), so you can reaccess the information quickly.
+                    
+                    Perform all these operations now using your tools.
+                    """
+                    response = self.client.generate("qwen3.5:9b", archive_prompt)
+                    print(f"Sentinel: {response}")
                     print("Sentinel: [INFO] Exiting.")
                     self.runMainLoop = False
                 elif prompt.lower() == "end":

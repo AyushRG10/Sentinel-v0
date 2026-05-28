@@ -1,8 +1,8 @@
 virtualEnviroment/
+.env
 
 __pycache__/
 
 informationVault/
 
-onlineLLMsClient.py
 todo
