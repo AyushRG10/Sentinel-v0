@@ -224,3 +224,58 @@ class ObsidianTools:
                     return True
                     
         return False
+
+    def delete_note(self, note_name: str) -> str:
+        """
+        Permanently deletes a note from the vault.
+        Uses the same multi-step path resolution as read_note.
+        Returns a success message or an error string.
+        """
+        if not note_name:
+            return "Error: note_name cannot be empty."
+
+        # Safety guard: protect critical system notes
+        PROTECTED_NOTES = {"current context", "sentinel control center", "welcome"}
+        if self._normalize_name(os.path.basename(note_name)) in PROTECTED_NOTES:
+            return f"Error: '{note_name}' is a protected system note and cannot be deleted."
+
+        # Standardize .md extension
+        if not note_name.lower().endswith(".md"):
+            note_name_md = note_name + ".md"
+        else:
+            note_name_md = note_name
+
+        target_path = None
+
+        # 1. Exact match relative to vault root
+        direct_path = os.path.join(self.vault_path, note_name_md)
+        if os.path.exists(direct_path) and os.path.isfile(direct_path):
+            target_path = direct_path
+
+        # 2. Recursive normalized search
+        if not target_path:
+            base_name_norm = self._normalize_name(os.path.basename(note_name_md))
+            for root, dirs, files in os.walk(self.vault_path):
+                dirs[:] = [d for d in dirs if not d.startswith('.')]
+                for file in files:
+                    if self._normalize_name(file) == base_name_norm:
+                        target_path = os.path.join(root, file)
+                        break
+                if target_path:
+                    break
+
+        # 3. Raw fallback
+        if not target_path:
+            raw_path = os.path.join(self.vault_path, note_name)
+            if os.path.exists(raw_path) and os.path.isfile(raw_path):
+                target_path = raw_path
+
+        if not target_path:
+            return f"Error: Note '{note_name}' not found in the vault."
+
+        try:
+            os.remove(target_path)
+            rel_path = os.path.relpath(target_path, self.vault_path)
+            return f"Successfully deleted '{rel_path}'."
+        except Exception as e:
+            return f"Error deleting '{note_name}': {str(e)}"

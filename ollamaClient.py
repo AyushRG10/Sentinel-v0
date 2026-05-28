@@ -64,6 +64,20 @@ class OllamaClient:
                         'required': ['note_name', 'content']
                     }
                 }
+            },
+            {
+                'type': 'function',
+                'function': {
+                    'name': 'delete_note',
+                    'description': 'Permanently delete a note from the vault by filename or relative path. Protected system notes (Current_Context, Sentinel_Control_Center, Welcome) cannot be deleted.',
+                    'parameters': {
+                        'type': 'object',
+                        'properties': {
+                            'note_name': {'type': 'string', 'description': 'The filename or relative path of the note to delete (e.g., "memories/old_note.md").'}
+                        },
+                        'required': ['note_name']
+                    }
+                }
             }
         ]
         self.history = [{"role": "system", "content": f"""
@@ -149,6 +163,8 @@ class OllamaClient:
                             res = f"Error: You are trying to overwrite existing note '{note_name}' using overwrite=True, but you have NOT read this note's content in this session yet. To prevent losing user context, you MUST first read the note using 'read_note' to retrieve its current content, merge your changes in your context, and then write the full merged note using 'write_note' with overwrite=True."
                         else:
                             res = self.obsidian.write_note(note_name, args['content'], overwrite)
+                    elif fn_name == 'delete_note':
+                        res = self.obsidian.delete_note(args['note_name'])
                     else:
                         res = "Tool not found."
                 except Exception as e:

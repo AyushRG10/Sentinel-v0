@@ -41,7 +41,7 @@ class MainLoop:
                     
                     Perform all these operations now using your tools.
                     """
-                    response = self.client.generate("qwen3.5:9b", archive_prompt)
+                    response = self.client.generate("qwen3.5:4b", archive_prompt)
                     print(f"Sentinel: {response}")
                     print("Sentinel: [INFO] Exiting.")
                     self.runMainLoop = False
@@ -57,17 +57,27 @@ class MainLoop:
                     
                     Perform all these operations now using your tools.
                     """
-                    response = self.client.generate("qwen3.5:9b", archive_prompt)
+                    response = self.client.generate("qwen3.5:4b", archive_prompt)
                     print(f"Sentinel: {response}")
                 else:
                     # Retrieve the latest Current_Context.md to prep the agent's short-term memory
                     current_context = self.client.obsidian.read_note("Current_Context.md")
                     if current_context:
-                        full_prompt = f"[Current Context from Current_Context.md]\n{current_context}\n[End of Current Context]\n\nUser: {prompt}"
+                        context_block = f"[Current Context from Current_Context.md]\n{current_context}\n[End of Current Context]\n\n"
                     else:
-                        full_prompt = prompt
+                        context_block = "[Current Context: No context file found yet.]\n\n"
 
-                    response = self.client.generate("qwen3.5:9b", full_prompt)
+                    update_instruction = (
+                        "\n\n[System Notice: Context Update Required]\n"
+                        "After responding to the user, you MUST call write_note on "
+                        "memories/Current_Context.md with overwrite=True to update it "
+                        "with a concise summary of this conversation turn, any new facts "
+                        "learned, and outstanding tasks. Do this before ending your response."
+                    )
+
+                    full_prompt = f"{context_block}User: {prompt}{update_instruction}"
+
+                    response = self.client.generate("qwen3.5:4b", full_prompt)
                     print(f"Sentinel: {response}")
             else:
                 print("Sentinel: [ERROR] Client is offline.")
@@ -98,7 +108,7 @@ class MainLoop:
             
             Confirm once initialization is complete.
             """
-            response = self.client.generate("qwen3.5:9b", init_prompt)
+            response = self.client.generate("qwen3.5:4b", init_prompt)
             print(f"Sentinel: {response}")
         else:
             print("Sentinel: [WARNING] Welcome.md not found. Booting with default state.")
