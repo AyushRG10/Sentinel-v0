@@ -14,11 +14,11 @@ class KillSwitch:
         signal.signal(signal.SIGTSTP, self._handle_signal)
         
         self.is_armed = True
-        print(f"Sentinel: [INFO] Kill-switch armed. Press Ctrl+Z to exit.", flush=True)
+        print(f"Sentinel [INFO]: Kill-switch armed. Press Ctrl+Z to exit.", flush=True)
 
     def _handle_signal(self, sig, frame):
         self._panic_trigger()
 
     def _panic_trigger(self) -> None:
-        print("\nSentinel: [EMERGENCY] Kill-switch triggered. Exiting...", flush=True)
+        print("\nSentinel [EMERGENCY]: Kill-switch triggered. Exiting...", flush=True)
         os._exit(1)

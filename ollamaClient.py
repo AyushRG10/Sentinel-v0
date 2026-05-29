@@ -137,7 +137,7 @@ class OllamaClient:
                 fn_name = tool.function.name
                 args = tool.function.arguments
                 
-                print(f"[Sentinel] Executing tool: {fn_name} with {args}")
+                print(f"Sentinel [TOOL]: {fn_name} | args: {args}")
                 
                 try:
                     if fn_name == 'search_filenames':

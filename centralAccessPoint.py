@@ -19,18 +19,18 @@ class MainLoop:
             isClientActive = self.client.check_model()
             if isClientActive:
                 if self.tries != 0:
-                    print("Sentinel: [INFO] Client is online.")
+                    print("Sentinel [INFO]: Client is online.")
                     self.tries = 0
                 
                 try:
                     prompt = input("User: ").strip()
                 except (KeyboardInterrupt, EOFError):
-                    print("\nSentinel: [INFO] Exiting.")
+                    print("\nSentinel [INFO]: Exiting.")
                     self.runMainLoop = False
                     break
 
                 if prompt.lower() == "quit":
-                    print("Sentinel: [INFO] Executing end-of-session archiving before exit...")
+                    print("Sentinel [INFO]: Executing end-of-session archiving before exit...")
                     today_str = datetime.date.today().strftime("%m.%d.%Y")
                     archive_prompt = f"""[System Notice: Archive Command]
                     Take everything from memories/Current_Context.md and archive it:
@@ -42,11 +42,11 @@ class MainLoop:
                     Perform all these operations now using your tools.
                     """
                     response = self.client.generate("qwen3.5:4b", archive_prompt)
-                    print(f"Sentinel: {response}")
-                    print("Sentinel: [INFO] Exiting.")
+                    print(f"Sentinel [RESPONSE]: {response}")
+                    print("Sentinel [INFO]: Exiting.")
                     self.runMainLoop = False
                 elif prompt.lower() == "end":
-                    print("Sentinel: [INFO] Executing end-of-session archiving...")
+                    print("Sentinel [INFO]: Executing end-of-session archiving...")
                     today_str = datetime.date.today().strftime("%m.%d.%Y")
                     archive_prompt = f"""[System Notice: Archive Command]
                     Take everything from memories/Current_Context.md and archive it:
@@ -58,7 +58,7 @@ class MainLoop:
                     Perform all these operations now using your tools.
                     """
                     response = self.client.generate("qwen3.5:4b", archive_prompt)
-                    print(f"Sentinel: {response}")
+                    print(f"Sentinel [RESPONSE]: {response}")
                 else:
                     # Retrieve the latest Current_Context.md to prep the agent's short-term memory
                     current_context = self.client.obsidian.read_note("Current_Context.md")
@@ -78,21 +78,21 @@ class MainLoop:
                     full_prompt = f"{context_block}User: {prompt}{update_instruction}"
 
                     response = self.client.generate("qwen3.5:4b", full_prompt)
-                    print(f"Sentinel: {response}")
+                    print(f"Sentinel [RESPONSE]: {response}")
             else:
-                print("Sentinel: [ERROR] Client is offline.")
-                print("Sentinel: [INFO] Trying to reconnect.")
+                print("Sentinel [ERROR]: Client is offline.")
+                print("Sentinel [INFO]: Trying to reconnect.")
                 self.tries += 1
                 if self.tries >= 3:
-                    print("Sentinel: [ERROR] Client is offline. Exiting.")
+                    print("Sentinel [ERROR]: Client is offline. Exiting.")
                     self.runMainLoop = False
                 time.sleep(1)
 
     def initialize_sentinel(self):
-        print("Sentinel: [INFO] Booting up. Reading Welcome.md...")
+        print("Sentinel [INFO]: Booting up. Reading Welcome.md...")
         welcome_content = self.client.obsidian.read_note("Welcome.md")
         if welcome_content:
-            print("Sentinel: [INFO] Executing initialization tasks...")
+            print("Sentinel [INFO]: Executing initialization tasks...")
             init_prompt = f"""[System Notice: Initialization Mode]
             Read Welcome.md below and execute the startup tasks:
             1. Read the listed directive files: Operational Directives, Core_Identity_and_Persona, PC_Information, Sentinel_Specifications.
@@ -109,9 +109,9 @@ class MainLoop:
             Confirm once initialization is complete.
             """
             response = self.client.generate("qwen3.5:4b", init_prompt)
-            print(f"Sentinel: {response}")
+            print(f"Sentinel [RESPONSE]: {response}")
         else:
-            print("Sentinel: [WARNING] Welcome.md not found. Booting with default state.")
+            print("Sentinel [WARNING]: Welcome.md not found. Booting with default state.")
 
 if __name__ == "__main__":
     MainLoop()
