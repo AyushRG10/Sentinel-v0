@@ -39,10 +39,6 @@ class OnlineLLMsClient:
         self.api_key = self._keys[self._key_index]
         print(f"Sentinel [INFO]: Using GEMINI_KEY_{self._key_index + 1} as active API key.")
 
-    # ------------------------------------------------------------------
-    # Key management helpers
-    # ------------------------------------------------------------------
-
     def _build_url(self, key: str) -> str:
         return BASE_URL.format(model=self.model, key=key)
 
@@ -93,10 +89,6 @@ class OnlineLLMsClient:
         self.api_key = self._keys[self._key_index]
         print(f"Sentinel [INFO]: Switched to GEMINI_KEY_{self._key_index + 1}.")
         return True
-
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
 
     def generate_response(self, prompt: str, system_instruction: str = "", use_grounding: bool = True) -> str:
         payload = {
@@ -154,10 +146,4 @@ class OnlineLLMsClient:
                     else:
                         return f"Sentinel [ERROR]: Online cognitive layer timed out/failed after {attempts} attempts. Error: {str(e)}"
             else:
-                # Inner for-loop completed without a break → all retries failed non-quota.
                 return "Sentinel [ERROR]: Online cognitive layer timed out after multiple attempts."
-            # If we broke out of the inner loop (key rotation), continue outer loop.
-
-if __name__ == "__main__":
-    onlineClient = OnlineLLMsClient()
-    print(onlineClient.generate_response("What is new about Antigravity 2.0?"))
